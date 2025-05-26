@@ -21,6 +21,7 @@ class RandomWalkModel:
         self.currentGeneration = 0
 
         # default variant
+        
         self.transitionProbabilities = [
             [1.0, 0.0, 0.0, 0.0, 0.0],       # Healthy
             [0.2, 0.3, 0.11, 0.34, 0.05],    # Sick
@@ -29,14 +30,15 @@ class RandomWalkModel:
             [0.7, 0.0, 0.0, 0.0, 0.3]        # Immune
         ]
        
-       # lockdown 
-        self.transitionProbabilities = [
-            [1.0, 0.0, 0.0, 0.0, 0.0],       # Healthy
-            [0.4, 0.3, 0.08, 0.2, 0.12],    # Sick
-            [0.2, 0.0, 0.5, 0.0, 0.3],       # Asymptomatic
-            [0.0, 0.0, 0.0, 1.0, 0.0],       # Dead
-            [0.7, 0.0, 0.0, 0.0, 0.3]        # Immune
-        ]
+        # lockdown variant
+        
+        # self.transitionProbabilities = [
+        #     [1.0, 0.0, 0.0, 0.0, 0.0],       # Healthy
+        #     [0.4, 0.3, 0.08, 0.2, 0.12],    # Sick
+        #     [0.2, 0.0, 0.5, 0.0, 0.3],       # Asymptomatic
+        #     [0.0, 0.0, 0.0, 1.0, 0.0],       # Dead
+        #     [0.7, 0.0, 0.0, 0.0, 0.3]        # Immune
+        # ]
 
         self.contagionFactor = 0.75
         self.socialDistanceEffect = 0.375
@@ -150,16 +152,21 @@ class RandomWalkModel:
         img.save(f"gen{name}.png")
         img.show()
 
-
 # =======================
 #         MAIN
 # =======================
 
-numberOfRuns = 1              # Ajuste aqui o número de simulações
-gridSize = 100                 # Tamanho da matriz
-numberOfGenerations = 52      # Quantidade de gerações por simulação
+numberOfRuns = 1              # Número de vezes em que a simulação é executada
+gridSize = 100                 # Tamanho da matriz (156x156) ~= 24.500 pessoas
+numberOfGenerations = 52      # Quantidade de semanas 52 * 7 = 365 dias (1 ano) 
 saveImages = True             # Salvar imagens? True ou False
 verbose = True               # Mostrar detalhes no console? True ou False
+
+# 🟢 Verde: saudável
+# 🟡 Amarelo: doente
+# 🔴 Vermelho: morto
+# 🔵 Azul: imune
+# 🟣 Roxo: assintomático
 
 for i in range(numberOfRuns):
     print(f"Simulação {i + 1}")
