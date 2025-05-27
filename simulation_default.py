@@ -139,7 +139,7 @@ class RandomWalkModel:
                 elif state == State.asymptomatic:
                     img.putpixel((j, i), (255, 0, 255))
 
-        img.save(f"gen{name}.png")
+        img.save(f"./images/simulation-{name}.png")
         img.show()
 
 # =======================
