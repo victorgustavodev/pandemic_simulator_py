@@ -21,7 +21,7 @@ class RandomWalkModel:
         self.currentGeneration = 0
 
         # default variant
-        
+
         self.transitionProbabilities = [
             [1.0, 0.0, 0.0, 0.0, 0.0],       # Healthy
             [0.2, 0.3, 0.11, 0.34, 0.05],    # Sick
@@ -29,19 +29,9 @@ class RandomWalkModel:
             [0.0, 0.0, 0.0, 1.0, 0.0],       # Dead
             [0.7, 0.0, 0.0, 0.0, 0.3]        # Immune
         ]
-       
-        # lockdown variant
         
-        # self.transitionProbabilities = [
-        #     [1.0, 0.0, 0.0, 0.0, 0.0],       # Healthy
-        #     [0.4, 0.3, 0.08, 0.2, 0.12],    # Sick
-        #     [0.2, 0.0, 0.5, 0.0, 0.3],       # Asymptomatic
-        #     [0.0, 0.0, 0.0, 1.0, 0.0],       # Dead
-        #     [0.7, 0.0, 0.0, 0.0, 0.3]        # Immune
-        # ]
-
-        self.contagionFactor = 0.75
-        self.socialDistanceEffect = 0.375
+        self.contagionFactor = 0.7 # Probability of getting sick after interaction with a sick individual 
+        self.socialDistanceEffect = 0.0 # Probability of avoiding contact because of social distancing
 
         for i in range(populationMatrixSize):
             self.population.append([])
@@ -157,8 +147,8 @@ class RandomWalkModel:
 # =======================
 
 numberOfRuns = 1              # Número de vezes em que a simulação é executada
-gridSize = 100                 # Tamanho da matriz (156x156) ~= 24.500 pessoas
-numberOfGenerations = 52      # Quantidade de semanas 52 * 7 = 365 dias (1 ano) 
+gridSize = 156                 # Tamanho da matriz (156x156) ~= 24.500 pessoas
+numberOfGenerations = 51      # Quantidade de semanas (51 por que o zero conta) 52 * 7 = 365 dias (1 ano) 
 saveImages = True             # Salvar imagens? True ou False
 verbose = True               # Mostrar detalhes no console? True ou False
 
