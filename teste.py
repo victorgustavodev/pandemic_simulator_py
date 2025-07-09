@@ -1,11 +1,12 @@
 import enum
 import random
+import pandas as pd  # Importa a biblioteca pandas
 from PIL import Image
-from tabulate import tabulate # Certifique-se de que a biblioteca está instalada (pip install tabulate)
-from fpdf import FPDF # Certifique-se de que a biblioteca está instalada (pip install fpdf2)
+from tabulate import tabulate
 
-#This code is a simulation of a disease spread using a random walk model.
-#This code used to be in a file called "simulation_default.py" and is now being refactored to include PDF generation and other improvements.
+# Certifique-se de que as bibliotecas necessárias estão instaladas:
+# pip install pandas openpyxl Pillow tabulate
+
 # Enum class to represent the possible states of an individual in the simulation.
 class State(enum.Enum):
     healthy = 0
@@ -24,18 +25,19 @@ class RandomWalkModel:
         self.nextPopulation = []
         self.currentGeneration = 0
 
-        # default variant
+        # # default variant
         # self.transitionProbabilities = [
         #     [1.0, 0.0, 0.0, 0.0, 0.0],      # Healthy
-        #     [0.2, 0.3, 0.11, 0.34, 0.05],   # Sick
-        #     [0.3, 0.0, 0.6, 0.0, 0.1],      # Asymptomatic
+        #     [0.2, 0.3, 0.11, 0.34, 0.05],    # Sick
+        #     [0.3, 0.0, 0.6, 0.0, 0.1],       # Asymptomatic
         #     [0.0, 0.0, 0.0, 1.0, 0.0],      # Dead
         #     [0.7, 0.0, 0.0, 0.0, 0.3]       # Immune
         # ]
         
         # self.contagionFactor = 0.7 # Probability of getting sick after interaction with a sick individual 
         # self.socialDistanceEffect = 0.0 # Probability of avoiding contact because of social distancing
-        
+
+
         self.transitionProbabilities = [
             [1.0, 0.0, 0.0, 0.0, 0.0],       # Healthy
             [0.4, 0.15, 0.23, 0.2, 0.12],    # Sick
@@ -47,7 +49,7 @@ class RandomWalkModel:
         self.contagionFactor = 0.7 # Probability of getting sick after interaction with a sick individual 
         self.socialDistanceEffect = 0.5 # Probability of avoiding contact because of social distancing
         
-
+        
         for i in range(populationMatrixSize):
             self.population.append([])
             self.nextPopulation.append([])
@@ -103,51 +105,31 @@ class RandomWalkModel:
                 cases[individual.state.value] += 1
         return cases
 
-    def simulation(self, generations, verbose):
+    def simulation(self, generations):
         for _ in range(generations):
             self.nextGeneration()
 
     def numberOfDeaths(self):
         return sum(1 for row in self.population for individual in row if individual.state == State.dead)
 
-# =======================
-#      PDF GENERATOR
-# =======================
-class PDF(FPDF):
-    def header(self):
-        self.set_font('Arial', 'B', 14)
-        self.cell(0, 10, 'Relatório Consolidado das Simulações', 0, 1, 'C')
-        self.ln(5)
-
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.cell(0, 10, f'Página {self.page_no()}', 0, 0, 'C')
-
-    def create_table(self, table_data, headers, summary_row=None):
-        self.set_font('Arial', 'B', 9)
-        # Distribui a largura da coluna de forma uniforme
-        effective_width = self.w - self.l_margin - self.r_margin
-        col_width = effective_width / len(headers)
-
-        # Imprime os cabeçalhos da tabela
-        for header in headers:
-            self.cell(col_width, 8, header, 1, 0, 'C')
-        self.ln()
-
-        # Imprime as linhas de dados da tabela
-        self.set_font('Arial', '', 9)
-        for row in table_data:
-            for item in row:
-                self.cell(col_width, 8, str(item), 1, 0, 'C')
-            self.ln()
-
-        # Imprime a linha de resumo (média) com destaque
-        if summary_row:
-            self.set_font('Arial', 'B', 9) # Usa negrito para a linha de resumo
-            for item in summary_row:
-                self.cell(col_width, 8, str(item), 1, 0, 'C')
-            self.ln()
+    def printImage(self, name):
+        lines = len(self.population)
+        columns = len(self.population[0])
+        img = Image.new("RGB", (columns, lines))
+        colors = {
+            State.healthy: (0, 255, 0),
+            State.sick: (255, 255, 0),
+            State.dead: (255, 0, 0),
+            State.immune: (0, 0, 255),
+            State.asymptomatic: (255, 0, 255)
+        }
+        for i in range(lines):
+            for j in range(columns):
+                state = self.population[i][j].state
+                img.putpixel((j, i), colors.get(state, (0,0,0))) # Default to black if state not in map
+        
+        # img.save(f"./images/simulation-{name}.png")
+        # img.show()
 
 # =======================
 #         MAIN
@@ -157,28 +139,27 @@ numberOfRuns = 1000
 gridSize = 156
 numberOfGenerations = 52
 saveImages = False
-verbose = False
 
-# Cabeçalhos para as tabelas
+# Cabeçalhos para a tabela e o arquivo Excel
 console_headers = [state.name.capitalize() for state in State] + ["Deaths"]
-pdf_table_headers = ['Execução'] + console_headers
+excel_headers = ['Execução'] + console_headers
 
 # Listas para armazenar os resultados
-all_runs_data_for_pdf = []
+all_runs_data = []
 sums = [0] * (len(State) + 1)
 
 # Loop principal para executar as simulações e coletar dados
 for i in range(numberOfRuns):
-    print(f"Simulação {i + 1}")
+    print(f"Simulação {i + 1}/{numberOfRuns}")
     model = RandomWalkModel(gridSize)
-    model.simulation(numberOfGenerations, verbose)
+    model.simulation(numberOfGenerations)
 
     report = model.report()
     deaths = model.numberOfDeaths()
     
-    # Guarda os resultados desta execução para o PDF
+    # Guarda os resultados desta execução para a tabela
     run_results = report + [deaths]
-    all_runs_data_for_pdf.append([f"{i + 1}"] + run_results)
+    all_runs_data.append([f"{i + 1}"] + run_results)
 
     # Acumula os totais para o cálculo da média
     for idx in range(len(report)):
@@ -186,34 +167,30 @@ for i in range(numberOfRuns):
     sums[-1] += deaths
 
     if saveImages:
-        # A função printImage ainda pode ser usada se necessário
         model.printImage(f"run_{i+1}")
 
-# --- Geração do Relatório em PDF Após todas as simulações ---
+# --- Geração do Relatório em Excel (.xlsx) ---
 
 # Calcula as médias
 averages = [round(value / numberOfRuns) for value in sums]
-averages_row = ['Média Final'] + averages # Cria a linha de resumo para o PDF
+averages_row = ['Média Final'] + averages  # Cria a linha de resumo
 
-# Inicializa o objeto PDF e adiciona uma página
-pdf = PDF()
-pdf.add_page()
+# Cria um DataFrame com todos os dados
+df = pd.DataFrame(all_runs_data, columns=excel_headers)
 
-# Adiciona a tabela única e consolidada ao PDF
-pdf.create_table(
-    table_data=all_runs_data_for_pdf,
-    headers=pdf_table_headers,
-    summary_row=averages_row
-)
+# Cria um DataFrame para a linha de média e o anexa ao final
+df_avg = pd.DataFrame([averages_row], columns=excel_headers)
+df_final = pd.concat([df, df_avg], ignore_index=True)
 
-# Salva o arquivo PDF final
-pdf_output_filename = "relatorio_simulacoes_consolidado.pdf"
-pdf.output(pdf_output_filename, "/results/" + pdf_output_filename)
+# Salva o DataFrame em um arquivo Excel
+excel_output_filename = "relatorio_simulacoes_consolidado.xlsx"
+df_final.to_excel(excel_output_filename, index=False, sheet_name='Resultados Consolidados')
 
 # --- Saída Final no Console ---
 
 print("\n" + "="*40)
 print("MÉDIA FINAL DAS SIMULAÇÕES (CONSOLE):")
 print("="*40)
+# Mostra a tabela de médias no console
 print(tabulate([averages], headers=console_headers, tablefmt="grid"))
-print(f"\nRelatório consolidado em PDF '{pdf_output_filename}' gerado com sucesso.")
+print(f"\nRelatório consolidado em Excel '{excel_output_filename}' gerado com sucesso.")
